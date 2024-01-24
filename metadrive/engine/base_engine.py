@@ -527,6 +527,7 @@ class BaseEngine(EngineCore, Randomizable):
             return self.agents["default_agent"]
         else:
             return None
+            # return self.agents['agent0']
 
     @property
     def agents(self):

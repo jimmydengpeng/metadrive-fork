@@ -29,7 +29,7 @@ def draw_top_down_map(
     road_color=color_white,
 ) -> Optional[Union[np.ndarray, pygame.Surface]]:
     import cv2
-    film_size = film_size or map.film_size
+    film_size = film_size or map.film_size # map.film_size: (1024, 1024) (对于多智体环境默认为)
     surface = WorldSurface(film_size, 0, pygame.Surface(film_size))
     if reverse_color:
         surface.WHITE, surface.BLACK = surface.BLACK, surface.WHITE
@@ -88,7 +88,8 @@ def draw_top_down_map(
                         LaneGraphics.draw_drivable_area(l, surface, color=road_color)
                     else:
                         two_side = True if l is map.road_network.graph[_from][_to][-1] or decoration else False
-                        LaneGraphics.display(l, surface, two_side, use_line_color=True)
+                        # LaneGraphics.display(l, surface, two_side, use_line_color=True)
+                        LaneGraphics.display(l, surface, two_side, use_line_color=False, color=road_color)
     if return_surface:
         return surface
     ret = cv2.resize(pygame.surfarray.pixels_red(surface), resolution, interpolation=cv2.INTER_LINEAR)
@@ -113,15 +114,18 @@ def draw_top_down_trajectory(
         if "spawn_roads" in episode_data:
             spawn_roads = episode_data["spawn_roads"]
         else:
+            print('1--------')
             spawn_roads = set()
             first_frame = episode_data["frame"][0]
             for state in first_frame[TARGET_VEHICLES].values():
                 spawn_roads.add((state["spawn_road"][0], state["spawn_road"][1]))
+            print('2--------', spawn_roads)
         keys = [road[0] for road in list(spawn_roads)]
         keys.sort()
         color_map = {key: color for key, color in zip(keys, color_list)}
 
     for frame in episode_data["frame"]:
+        last = None
         for k, state, in frame[TARGET_VEHICLES].items():
             if color_type == 0:
                 color = color_white
@@ -143,8 +147,13 @@ def draw_top_down_trajectory(
                 color = color_map[key_1][key_2]
             start = state["position"]
             pygame.draw.circle(surface, color, surface.pos2pix(start[0], start[1]), 1)
+            # center = surface.pos2pix(start[0], start[1])
+            # pygame.draw.rect(surface, color, pygame.Rect(center[0]-1, center[1]-1, 2, 2))
     for step, frame in enumerate(episode_data["frame"]):
         for k, state in frame[TARGET_VEHICLES].items():
+            if "done" not in state: #TODO
+                break
+
             if not state["done"]:
                 continue
             start = state["position"]
@@ -166,8 +175,8 @@ class TopDownRenderer:
         camera_position=None,
         target_vehicle_heading_up=False,
         draw_target_vehicle_trajectory=False,
+        current_track_vehicle=None,
         **kwargs
-        # current_track_vehicle=None
     ):
         # Setup some useful flags
         self.position = camera_position
@@ -186,7 +195,7 @@ class TopDownRenderer:
         self.history_objects = deque(maxlen=num_stack)
         self.history_target_vehicle = []
         self.history_smooth = history_smooth
-        # self.current_track_vehicle = current_track_vehicle
+        self.current_track_vehicle = current_track_vehicle
         if self.target_vehicle_heading_up:
             assert self.current_track_vehicle is not None, "Specify which vehicle to track"
         self.road_color = road_color
@@ -221,7 +230,7 @@ class TopDownRenderer:
 
         # Setup some runtime variables
         self._render_size = screen_size
-        self._background_size = tuple(self._background_canvas.get_size())
+        self._background_size = tuple(self._background_canvas.get_size()) # film_size
         # screen_size = self._screen_size or self._render_size
         # self._blit_size = (int(screen_size[0] * self._zoomin), int(screen_size[1] * self._zoomin))
         # self._blit_rect = (
@@ -337,9 +346,9 @@ class TopDownRenderer:
         self.history_objects.clear()
         self.history_target_vehicle.clear()
 
-    @property
-    def current_track_vehicle(self):
-        return self.engine.current_track_vehicle
+    # @property
+    # def current_track_vehicle(self):
+    #     return self.engine.current_track_vehicle
 
     def _append_frame_objects(self, objects):
         frame_objects = []
@@ -405,8 +414,11 @@ class TopDownRenderer:
         # Draw current vehicle with black contour
         # Use this line if you wish to draw "future" trajectory.
         # i is the index of vehicle that we will render a black box for it.
-        # i = int(len(self.history_vehicles) / 2)
-        i = -1
+        draw_future_traj = kwargs.get('draw_future_traj', False)
+        if draw_future_traj:
+            i = int(len(self.history_objects) / 2)
+        else:
+            i = -1
         for v in self.history_objects[i]:
             h = v.heading_theta
             c = v.color
@@ -446,8 +458,19 @@ class TopDownRenderer:
         canvas = self._runtime_canvas
         field = self._render_canvas.get_size()
         if not self.target_vehicle_heading_up:
-            cam_pos = v.position if self.position is None else self.position
-            position = self._runtime_canvas.pos2pix(*cam_pos)
+            # if v is None and self.position is None:
+            #     b_box = self.map.road_network.get_bounding_box() 
+            #     _x = (b_box[1] + b_box[0]) / 2
+            #     _y = (b_box[3] + b_box[2]) / 2
+            #     cam_pos = (_x, _y)
+            # else:
+            #     cam_pos = v.position if self.position is None else self.position
+            
+            if self.position is not None or v is not None:
+                cam_pos = (self.position or v.position)
+                position = self._runtime_canvas.pos2pix(*cam_pos)
+            else:
+                position = (field[0] / 2, field[1] / 2)
             off = (position[0] - field[0] / 2, position[1] - field[1] / 2)
             self.canvas.blit(source=canvas, dest=(0, 0), area=(off[0], off[1], field[0], field[1]))
         else:

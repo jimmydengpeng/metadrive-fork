@@ -84,8 +84,15 @@ for env_name, entry in marl_env.items():
         envs.append(env_name)
         gym.register(id=env_name, entry_point=entry, kwargs=dict(config={}))
 
-if len(envs) > 0:
-    print("Successfully registered the following environments: {}.".format(envs))
+# if len(envs) > 0:
+#     try:
+#         from rich import print
+#         from rich.panel import Panel
+#         msg = f"[bright_black]Successfully registered all environments![/bright_black]"
+#         print(Panel.fit(msg, title="[bold bright_black]MetaDrive", title_align='center', border_style="bright_black"))
+#     except NotImplementedError as e:
+#         print(e)
+#         print("Successfully registered the following environments: {}.".format(envs))
 
 if __name__ == '__main__':
     # Test purpose only

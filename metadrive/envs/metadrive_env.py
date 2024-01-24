@@ -1,5 +1,5 @@
 import copy
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
 
@@ -281,7 +281,7 @@ class MetaDriveEnv(BaseEnv):
             reward = -self.config["crash_object_penalty"]
         return reward, step_info
 
-    def switch_to_third_person_view(self) -> (str, BaseVehicle):
+    def switch_to_third_person_view(self) -> Tuple[str, BaseVehicle]:
         if self.main_camera is None:
             return
         self.main_camera.reset()

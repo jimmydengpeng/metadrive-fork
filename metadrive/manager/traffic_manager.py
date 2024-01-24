@@ -157,7 +157,10 @@ class PGTrafficManager(BaseManager):
                     traffic_states[vehicle.index] = vehicle.get_state()
         states[TRAFFIC_VEHICLES] = traffic_states
         active_obj = copy.copy(self.engine.agent_manager._active_objects)
-        pending_obj = copy.copy(self.engine.agent_manager._pending_objects)
+        if hasattr(self.engine.agent_manager, '_pending_objects'):
+            pending_obj = copy.copy(self.engine.agent_manager._pending_objects)
+        else:
+            pending_obj = {}
         dying_obj = copy.copy(self.engine.agent_manager._dying_objects)
         states[TARGET_VEHICLES] = {k: v.get_state() for k, v in active_obj.items()}
         states[TARGET_VEHICLES] = merge_dicts(

@@ -13,7 +13,7 @@ Options for --env argument:
     (6) pgma
 
 """
-import argparse
+import argparse, logging
 
 from metadrive import (
     MultiAgentMetaDrive, MultiAgentTollgateEnv, MultiAgentBottleneckEnv, MultiAgentIntersectionEnv,
@@ -33,11 +33,20 @@ if __name__ == "__main__":
     )
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", type=str, default="roundabout", choices=list(envs.keys()))
+    parser.add_argument("--env", type=str, default="parkinglot", choices=list(envs.keys()))
     parser.add_argument("--top_down", action="store_true")
     args = parser.parse_args()
+    args.top_down = True
+    # args.env = 'bottleneck'
+    args.env = 'parkinglot'
     env_cls_name = args.env
-    extra_args = dict(film_size=(800, 800)) if args.top_down else {}
+    extra_args = dict(
+        film_size=(1000, 1000), 
+        screen_size=(1000, 1000),
+        num_stack=50,
+        draw_future_traj=False,
+        track_target_vehicle=False) if args.top_down else {}
+    
     assert env_cls_name in envs.keys(), "No environment named {}, argument accepted: \n" \
                                         "(1) roundabout\n" \
                                         "(2) intersection\n" \
@@ -52,12 +61,22 @@ if __name__ == "__main__":
             "render_mode": "top_down" if args.top_down else None,
             "manual_control": False,
             "crash_done": False,
-            "agent_policy": ManualControllableIDMPolicy
+            "agent_policy": ManualControllableIDMPolicy,
+            "preload_models": False, 
         }
     )
     try:
         env.reset()
+        env.logger.setLevel(logging.WARNING)
+        '''
+            CRITICAL | 50
+            ERROR    | 40
+            WARNING  | 30
+            INFO     | 20
+            DEBUG    | 10
+        '''
         if env.current_track_vehicle:
+            print('>>> 1')
             env.current_track_vehicle.expert_takeover = True
         print(HELP_MESSAGE)
         env.switch_to_third_person_view()  # Default is in Top-down view, we switch to Third-person view.

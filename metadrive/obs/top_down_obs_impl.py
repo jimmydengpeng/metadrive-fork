@@ -119,7 +119,7 @@ class WorldSurface(pygame.Surface):
         self.origin = np.array([0, 0])
         self.scaling = self.INITIAL_SCALING
         self.centering_position = self.INITIAL_CENTERING
-        self.fill(self.BLACK)
+        self.fill(self.BLACK) # before!
 
     def pix(self, length: float) -> int:
         """
@@ -208,6 +208,7 @@ class VehicleGraphics:
         if not surface.is_visible(vehicle.position):
             return
         w = surface.pix(vehicle.WIDTH)
+        # w = surface.pix(0.2)
         h = surface.pix(vehicle.LENGTH)
         position = [*surface.pos2pix(vehicle.position[0], vehicle.position[1])]
         angle = np.rad2deg(heading)

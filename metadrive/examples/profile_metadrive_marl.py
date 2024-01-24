@@ -1,4 +1,4 @@
-import argparse
+import argparse, logging
 import time
 
 import numpy as np
@@ -12,8 +12,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("Start to profile the efficiency of MetaDrive Multi-agent Roundabout environment!")
-    setup_logger(debug=False)
+    # setup_logger(debug=False)
     env = MultiAgentRoundaboutEnv(dict(start_seed=1010))
+    env.logger.setLevel(logging.WARNING)
     obs, _ = env.reset()
     start = time.time()
     reset_used_time = 0

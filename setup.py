@@ -30,8 +30,8 @@ print("We will install the following packages: ", packages)
 version = "0.3.0.1"
 
 install_requires = [
-    "gymnasium>=0.28, <0.29",
-    "numpy>=1.21.6, <=1.24.2",
+    "gymnasium>=0.28",
+    "numpy>=1.21.6",
     "matplotlib",
     "pandas",
     "pygame",

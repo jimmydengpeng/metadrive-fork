@@ -75,11 +75,11 @@ if __name__ == "__main__":
         o, _ = env.reset()
         for i in range(1, 100000):
             o, r, tm, tc, info = env.step(expert(env.vehicle))
-            env.render(film_size=(800, 800))
+            # env.render(film_size=(800, 800))
             if tm or tc:
                 env.reset()
-            if i % 50 == 0:
-                draw_multi_channels_top_down_observation(o, show_time=5)  # show time 4s
+            # if i % 50 == 0:
+                # draw_multi_channels_top_down_observation(o, show_time=5)  # show time 4s
                 # ret = input("Do you wish to quit? Type any ESC to quite, or press enter to continue")
                 # if len(ret) == 0:
                 #     continue
